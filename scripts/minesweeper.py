@@ -14,8 +14,10 @@ def minesweeper():
   inp = input("Width (default "+ str(B_WIDTH)+"):")
   if inp != "": B_WIDTH = int(inp)
   if B_WIDTH > 21: print("> recommended max of 21")
-
-  if B_WIDTH * B_HEIGHT < 25: print("This is a small board. \n Consider making it larger.")
+  
+  if B_WIDTH <= 3 and B_HEIGHT <= 3: print("Board too small for safe start.\n0,0 safe")
+  elif B_WIDTH * B_HEIGHT < 25: print("This is a small board.\nConsider making it larger.")
+  
   # Define the number of bombs in the game
   N_BOMBS = int(B_HEIGHT*B_WIDTH*0.2)
   inp = input("# bombs (default "+str(N_BOMBS)+"):")
@@ -30,7 +32,11 @@ def minesweeper():
   if N_BOMBS >= B_HEIGHT * B_WIDTH:
     print("The board would fill or overflow with bombs. Bring down the number of bombs or increas the size of the board.")
     return()
-    
+  
+  # Precalculate this to not need to have it a million times
+  block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
+  block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
+
   # Define the settings
   debug = False
   render = True 
@@ -90,42 +96,34 @@ def minesweeper():
         for x in range(B_WIDTH):
           # Checks for a checked cell then a flagged cell that hides a bomb
           if not(str(self.B[y][x])[0] == "D" or ([x,y] in self.flagged and str(self.B[y][x])[0] == "X")):
-            #print("Failed at", x ,y, str(self.B[y][x]))
             return False
       return True      
     
     # If the board is complete, draw the rainbow pattern and exit
     def finish(self):
       good = self.check()
-      #print(good)
       if good:
         # The dark black background
-        if render: kandinsky.fill_rect(0,0,S_WIDTH,S_HEIGHT, colors["bg"])
         # The cells in which are stored the bombas
-        block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-        block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
         for y in range(B_HEIGHT): 
           ydraw = (block_height+OFFSET)*y+OFFSET
           for x in range(B_WIDTH):
-            #print("Block heigh and width", block_height, block_width)
             xdraw = (block_width+OFFSET)*x+OFFSET
             # Get the colour to be used in the rainbow
             c = rainbow[(x + y ) % len(rainbow)]
             #if debug: print("Drawing",xdraw,ydraw,block_width,block_height, colors["cell"])
             if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height, c)
             sleep(4 / (B_HEIGHT * B_WIDTH))
-        
+        # When we are done, wait for 5 second then end the function
+        sleep(5)
       
     def draw(self):
       # The dark black background
       if render: kandinsky.fill_rect(0,0,S_WIDTH,S_HEIGHT, colors["bg"])
       # The cells in which are stored the bombas
-      block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-      block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
       for y in range(B_HEIGHT): 
         ydraw = (block_height+OFFSET)*y+OFFSET
         for x in range(B_WIDTH):
-          #print("Block heigh and width", block_height, block_width)
           xdraw = (block_width+OFFSET)*x+OFFSET
           #if debug: print("Drawing",xdraw,ydraw,block_width,block_height, colors["cell"])
           if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height,colors["cell"])
@@ -139,114 +137,100 @@ def minesweeper():
         self.__init__()
         for i in range(N_BOMBS):
           self.spawnBomb()
-        good = (self.B[pointer.y][pointer.x] == 0)
+        if B_WIDTH <= 3 and B_HEIGHT <= 3: good = (self.B[0][0] != "X")
+        else: good = (self.B[pointer.y][pointer.x] == 0)
       print("Safe spawn:", good)
 
   class Pointer():
+    
     def __init__(self):
       # Create the pointer
       self.x = 0
       self.y = 0
+      # Set it to the offset so the first pointer is correctly drawn
+      self.xpointer = OFFSET
+      self.ypointer = OFFSET
     
+    # Less copy paste :)
+    def updatePointer(self):
+      self.xpointer = (block_width+OFFSET)*self.x+OFFSET
+      self.ypointer = (block_height+OFFSET)*(self.y)+OFFSET
+
     # All the moving directions
     def up(self):
       if self.y > 0:
         self.y -= 1
+        self.updatePointer()
     
     def down(self):
       if self.y < B_HEIGHT - 1:
         self.y += 1
+        self.updatePointer()
         
     def left(self):
       if self.x > 0:
         self.x -= 1
+        self.updatePointer()
     
     def right(self):
       if self.x < B_WIDTH - 1:
         self.x += 1
+        self.updatePointer()
+
     
     # Checks the cell for a bomb or a clear space
     def fire(self, board):
-      # Need the block dimentions anyways so why not put it here :)
-      block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-      block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
-      xprint = (block_width+OFFSET)*self.x+OFFSET
-      yprint = (block_height+OFFSET)*(self.y)+OFFSET
       # Check if the cell has allready been looked at
       if (not (str(board.B[self.y][self.x])[0] == "D"))and [self.x,self.y] not in board.flagged:
         # Check to see if the cell where the pointer is at is empty
         if board.B[self.y][self.x] != "X":
           # We didnt find a bomb so draw the number
-          if render:kandinsky.draw_string(str(board.B[self.y][self.x]),xprint, yprint)
-          if debug: print(xprint, yprint)    
+          if render:kandinsky.draw_string(str(board.B[self.y][self.x]),self.xpointer, self.ypointer)
+          if debug: print(self.xpointer, self.ypointer)    
         # If we found a bomb, draw a red rectrangle on the cell
         else:
-          if debug: print("Bomb found",xprint,yprint,block_width,block_height, colors["bomb"])
-          if render: kandinsky.fill_rect(xprint,yprint,block_width,block_height,colors["bomb"])
+          if debug: print("Bomb found",self.xpointer,self.ypointer,block_width,block_height, colors["bomb"])
+          if render: kandinsky.fill_rect(self.xpointer,self.ypointer,block_width,block_height,colors["bomb"])
         # Add it to the list of checked cells so you cant loose numbers or found bombs
         board.B[self.y][self.x] = "D" + str(board.B[self.y][self.x] )
 
     # Add a flag for where you think a bomb is
     def flag(self,on, board):
       if not str(board.B[self.y][self.x])[0] == "D":
-        block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-        block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
-        ydraw = (block_height+OFFSET)*self.y+OFFSET
-        xdraw = (block_width+OFFSET)*self.x+OFFSET
         if on:
-          if debug: print("Bomb found",xdraw,ydraw,block_width,block_height, colors["flag"])
-          if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height,colors["flag"])
+          if debug: print("Bomb found",self.xpointer,self.ypointer,block_width,block_height, colors["flag"])
+          if render: kandinsky.fill_rect(self.xpointer,self.ypointer,block_width,block_height,colors["flag"])
           # Add it to a list of flagged cells so you cant set if off by accident
           if [self.x,self.y] not in board.flagged: board.flagged.append([self.x,self.y])
           if debug: print(board.flagged)
         else:
-          if debug: print("Bomb found",xdraw,ydraw,block_width,block_height, colors["cell"])
-          if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height,colors["cell"])
+          if debug: print("Bomb found",self.xpointer,self.ypointer,block_width,block_height, colors["cell"])
+          if render: kandinsky.fill_rect(self.xpointer,self.ypointer,block_width,block_height,colors["cell"])
           # Remove it from the flagged list
           if [self.x,self.y] in board.flagged:board.flagged.pop(board.flagged.index([self.x,self.y]))
           if debug: print(board.flagged)
+
     # A funciton to draw the pointer on the board    
-    def draw(self):
+    def draw(self,n):
       if render:
-        block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-        block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
-        colour = colors["pointer"]
-        xdraw = (block_width+OFFSET)*self.x
-        ydraw = (block_height+OFFSET)*self.y
+        colour = (255,255,255)
+        if n == 0: colour = colors["bg"]
+        else: colour = colors["pointer"]
         # Draw the top, bottom, left, right rectangles
-        kandinsky.fill_rect(xdraw,ydraw,block_width+OFFSET,OFFSET, colour)
-        kandinsky.fill_rect(xdraw,ydraw+block_height+OFFSET,block_width+OFFSET+OFFSET,OFFSET, colour)
-        kandinsky.fill_rect(xdraw,ydraw,OFFSET,block_height+OFFSET, colour)
-        kandinsky.fill_rect(xdraw+block_width+OFFSET,ydraw,OFFSET,block_height+OFFSET, colour)
-      
-    def erase(self):
-      if render:
-        block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
-        block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
-        colour = colors["bg"]
-        xdraw = (block_width+OFFSET)*self.x
-        ydraw = (block_height+OFFSET)*self.y
-        # Draw the top, bottom, left, right rectangles
-        kandinsky.fill_rect(xdraw,ydraw,block_width+OFFSET,OFFSET, colour)
-        kandinsky.fill_rect(xdraw,ydraw+block_height+OFFSET,block_width+OFFSET+OFFSET,OFFSET, colour)
-        kandinsky.fill_rect(xdraw,ydraw,OFFSET,block_height+OFFSET, colour)
-        kandinsky.fill_rect(xdraw+block_width+OFFSET,ydraw,OFFSET,block_height+OFFSET, colour)
+        if render: kandinsky.fill_rect(self.xpointer-OFFSET,self.ypointer-OFFSET,block_width+OFFSET,OFFSET, colour)
+        if render: kandinsky.fill_rect(self.xpointer-OFFSET,self.ypointer+block_height,block_width+OFFSET+OFFSET,OFFSET, colour)
+        if render: kandinsky.fill_rect(self.xpointer-OFFSET,self.ypointer-OFFSET,OFFSET,block_height+OFFSET, colour)
+        if render: kandinsky.fill_rect(self.xpointer+block_width,self.ypointer-OFFSET,OFFSET,block_height+OFFSET, colour)
+
     
   # Create the board and pointer
-  board = Board() # Idk how to not need to add this and icba to check if i even need it
+  board = Board()
   pointer = Pointer()
+
+  #Draw the board and pointer
   board.draw()
-  pointer.draw()
+  pointer.draw(1)
 
-  # Load the board with bomba
-  
-  # Prints a shown version of the board
-  #if debug:
-    #for i in range(B_HEIGHT):print(board.B[i])
-
-  # Draw the board
-
-  
   # Main gameplay loop
   ckey = "0"
   genned = False
@@ -254,24 +238,24 @@ def minesweeper():
     sleep(0.1)
     if keydown(KEY_LEFT) and ckey != "L":
       ckey = "L"
-      pointer.erase()
+      pointer.draw(0)
       pointer.left()
-      pointer.draw()
+      pointer.draw(1)
     elif keydown(KEY_RIGHT) and ckey != "R":
       ckey = "R"
-      pointer.erase()
+      pointer.draw(0)
       pointer.right()
-      pointer.draw()
+      pointer.draw(1)
     elif keydown(KEY_UP) and ckey != "U":
       ckey = "U"
-      pointer.erase()
+      pointer.draw(0)
       pointer.up()
-      pointer.draw()
+      pointer.draw(1)
     elif keydown(KEY_DOWN) and ckey != "D":
       ckey = "D"
-      pointer.erase()
+      pointer.draw(0)
       pointer.down()
-      pointer.draw()
+      pointer.draw(1)
     else:
       ckey = "0"
     
