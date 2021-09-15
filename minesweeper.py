@@ -34,12 +34,12 @@ def minesweeper():
   
   # Define all of the colors:
   colors = {"cell":(179, 179, 179), "bg":(82, 82, 82), "bomb":(255,0,0), "flag":(232, 179, 46), "pointer":(46, 232, 226)} 
-
+  rainbow = [(255, 0, 0), (255, 145, 0), (255, 255, 0), (0, 224, 26), (0, 242, 186), (0, 27, 232), (146, 0, 237), (237, 0, 126)]
+  
   class Board():
     def __init__(self):
       # Make to board array
       self.B = [[0 for row in range(B_WIDTH)] for column in range(B_HEIGHT)]
-      self.checked = []
       self.flagged = []
       self.points = 0
   
@@ -80,7 +80,39 @@ def minesweeper():
           self.incrementCell(bombx+1, bomby+1)
           # Bomb has been planted
           return()
+          
+    # This function checks the board to see if it's complete
+    def check(self):
+      for y in range(B_HEIGHT): 
+        for x in range(B_WIDTH):
+          # Checks for a checked cell then a flagged cell that hides a bomb
+          if not(str(self.B[y][x])[0] == "D" or ([x,y] in self.flagged and str(self.B[y][x])[0] == "X")):
+            print("Failed at", x ,y, str(self.B[y][x]))
+            return False
+      return True      
     
+    # If the board is complete, draw the rainbow pattern and exit
+    def finish(self):
+      good = self.check()
+      print(good)
+      if good:
+        # The dark black background
+        if render: kandinsky.fill_rect(0,0,S_WIDTH,S_HEIGHT, colors["bg"])
+        # The cells in which are stored the bombas
+        block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
+        block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
+        for y in range(B_HEIGHT): 
+          ydraw = (block_height+OFFSET)*y+OFFSET
+          for x in range(B_WIDTH):
+            #print("Block heigh and width", block_height, block_width)
+            xdraw = (block_width+OFFSET)*x+OFFSET
+            # Get the colour to be used in the rainbow
+            c = rainbow[(x + y ) % len(rainbow)]
+            #if debug: print("Drawing",xdraw,ydraw,block_width,block_height, colors["cell"])
+            if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height, c)
+            sleep(4 / (B_HEIGHT * B_WIDTH))
+        
+      
     def draw(self):
       # The dark black background
       if render: kandinsky.fill_rect(0,0,S_WIDTH,S_HEIGHT, colors["bg"])
@@ -127,7 +159,7 @@ def minesweeper():
       xprint = (block_width+OFFSET)*self.x+OFFSET
       yprint = (block_height+OFFSET)*(self.y)+OFFSET
       # Check if the cell has allready been looked at
-      if [self.x,self.y] not in board.checked and [self.x,self.y] not in board.flagged:
+      if (not (str(board.B[self.y][self.x])[0] == "D"))and [self.x,self.y] not in board.flagged:
         # Check to see if the cell where the pointer is at is empty
         if board.B[self.y][self.x] != "X":
           # We didnt find a bomb so draw the number
@@ -138,11 +170,11 @@ def minesweeper():
           if debug: print("Bomb found",xprint,yprint,block_width,block_height, colors["bomb"])
           if render: kandinsky.fill_rect(xprint,yprint,block_width,block_height,colors["bomb"])
         # Add it to the list of checked cells so you cant loose numbers or found bombs
-        board.checked.append([self.x,self.y])
+        board.B[self.y][self.x] = "D" + str(board.B[self.y][self.x] )
 
     # Add a flag for where you think a bomb is
     def flag(self,on, board):
-      if [self.x,self.y] not in board.checked:
+      if not str(board.B[self.y][self.x])[0] == "D":
         block_width = int((S_WIDTH-(OFFSET*(B_WIDTH+1)))/B_WIDTH)
         block_height = int((S_HEIGHT-(OFFSET*(B_HEIGHT+1)))/B_HEIGHT)
         ydraw = (block_height+OFFSET)*self.y+OFFSET
@@ -241,9 +273,11 @@ def minesweeper():
     # If they select to check this square
     if keydown(KEY_OK):
       pointer.fire(board)
+      board.finish()
     
     # If they select to add or remove a flag
     if keydown(KEY_LEFTPARENTHESIS):
       pointer.flag(True, board)
+      board.finish()
     if keydown(KEY_RIGHTPARENTHESIS):
       pointer.flag(False, board)
