@@ -9,10 +9,13 @@ def minesweeper():
   B_WIDTH = 17
   inp = input("Height (default "+str(B_HEIGHT)+"):")
   if inp != "": B_HEIGHT = int(inp)
+  if B_HEIGHT > 11: print("> recommended max of 11")
   
   inp = input("Width (default "+ str(B_WIDTH)+"):")
   if inp != "": B_WIDTH = int(inp)
-  
+  if B_WIDTH > 21: print("> recommended max of 21")
+
+  if B_WIDTH * B_HEIGHT < 25: print("This is a small board. \n Consider making it larger.")
   # Define the number of bombs in the game
   N_BOMBS = int(B_HEIGHT*B_WIDTH*0.2)
   inp = input("# bombs (default "+str(N_BOMBS)+"):")
@@ -87,14 +90,14 @@ def minesweeper():
         for x in range(B_WIDTH):
           # Checks for a checked cell then a flagged cell that hides a bomb
           if not(str(self.B[y][x])[0] == "D" or ([x,y] in self.flagged and str(self.B[y][x])[0] == "X")):
-            print("Failed at", x ,y, str(self.B[y][x]))
+            #print("Failed at", x ,y, str(self.B[y][x]))
             return False
       return True      
     
     # If the board is complete, draw the rainbow pattern and exit
     def finish(self):
       good = self.check()
-      print(good)
+      #print(good)
       if good:
         # The dark black background
         if render: kandinsky.fill_rect(0,0,S_WIDTH,S_HEIGHT, colors["bg"])
@@ -127,7 +130,18 @@ def minesweeper():
           #if debug: print("Drawing",xdraw,ydraw,block_width,block_height, colors["cell"])
           if render: kandinsky.fill_rect(xdraw,ydraw,block_width,block_height,colors["cell"])
           sleep(0.6 / (B_HEIGHT * B_WIDTH))
-  
+    
+    # This process ensures that there are good starting cells where the pointer is at
+    def gen(self, pointer):
+      good = False
+      print("Loading the bombs")
+      while not good:
+        self.__init__()
+        for i in range(N_BOMBS):
+          self.spawnBomb()
+        good = (self.B[pointer.y][pointer.x] == 0)
+      print("Safe spawn:", good)
+
   class Pointer():
     def __init__(self):
       # Create the pointer
@@ -218,19 +232,11 @@ def minesweeper():
         kandinsky.fill_rect(xdraw,ydraw,OFFSET,block_height+OFFSET, colour)
         kandinsky.fill_rect(xdraw+block_width+OFFSET,ydraw,OFFSET,block_height+OFFSET, colour)
     
-  # Create the board
-  # This process ensures that there are good starting cells
-  good = False
+  # Create the board and pointer
   board = Board() # Idk how to not need to add this and icba to check if i even need it
-  while not good:
-    board.__init__()
-    print("Loading the bombs")
-    for i in range(N_BOMBS):
-      board.spawnBomb()
-    good = (board.B[0][0] != "X")
-    print("Safe spawn:", good)
-    
   pointer = Pointer()
+  board.draw()
+  pointer.draw()
 
   # Load the board with bomba
   
@@ -239,12 +245,11 @@ def minesweeper():
     #for i in range(B_HEIGHT):print(board.B[i])
 
   # Draw the board
-  board.draw()
-  pointer.draw()
+
   
   # Main gameplay loop
   ckey = "0"
-  
+  genned = False
   while True:
     sleep(0.1)
     if keydown(KEY_LEFT) and ckey != "L":
@@ -272,6 +277,10 @@ def minesweeper():
     
     # If they select to check this square
     if keydown(KEY_OK):
+      # On the first turn, gen the board
+      if not genned:
+        board.gen(pointer)
+        genned = True
       pointer.fire(board)
       board.finish()
     
