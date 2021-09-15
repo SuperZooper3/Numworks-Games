@@ -11,7 +11,7 @@ Basic Tetris for a Numworks calculator.  Uses **left** and **right** arrows to m
 ![Tetris example image](tetris.jpg)
 
 ## Minesweeper:
-A minesweeper game for a numworks calculator. **Arrows** to move, **OK** to fire, **(** to flag and **)** to unflag. Start the game with `minesweeper()`.**Fully procedural** so you can make the board **any shape** you would like with the inputs at the start as well as add as many **bombs as you would like!** Using **flags protects you** from accidentally triggering a bomb square. All **boards guarantee ** that the first cell is safe for more winnable games.
+A minesweeper game for a numworks calculator. **Arrows** to move, **OK** to fire, **(** to flag and **)** to unflag. Start the game with `minesweeper()`.**Fully procedural** so you can make the board **any shape** you would like with the inputs at the start as well as add as many **bombs as you would like!** Using **flags protects you** from accidentally triggering a bomb square. All **boards guarantee** that the first cell is safe for more winnable games.
 
 *Install at:* https://my.numworks.com/python/superzooper3/minesweeper
 
