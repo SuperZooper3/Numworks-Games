@@ -26,8 +26,8 @@ def minesweeper():
   S_HEIGHT = 224
   S_WIDTH = 320
   
-  # Space between each cell
-  OFFSET = 3
+  # Space between each cell, CHANGE IF NOT READABLE
+  OFFSET = 2
 
   if N_BOMBS >= B_HEIGHT * B_WIDTH:
     print("The board would fill or overflow with bombs. Bring down the number of bombs or increas the size of the board.")
@@ -175,7 +175,7 @@ def minesweeper():
 
     
     # Checks the cell for a bomb or a clear space
-    def fire(self, board, x=None, y=None):
+    def fire(self, board, x=None, y=None, depth=0):
       if x == None: x = self.x
       if y == None: y = self.y
       xSpointer = (block_width+OFFSET)*x+OFFSET
@@ -197,17 +197,18 @@ def minesweeper():
           board.B[y][x] = "D" + str(board.B[y][x] )
           
           # This part of the code implements 0 collapse, through itteration
-          if board.B[y][x][-1] == "0":
+          # The depth check is to just make sure that python dosent get mad :)
+          if board.B[y][x][-1] == "0" and depth < 80:
             #print(x, y, "is clear, going deeper")
             # For all of the cells agacent to this cell, fire at them
-            self.fire(board,x - 1,y - 1)
-            self.fire(board,x + 0,y - 1)
-            self.fire(board,x + 1,y - 1)
-            self.fire(board,x - 1,y + 0)
-            self.fire(board,x + 1,y + 0)
-            self.fire(board,x - 1,y + 1)
-            self.fire(board,x + 0,y + 1)
-            self.fire(board,x + 1,y + 1)
+            self.fire(board,x - 1,y - 1, depth + 1)
+            self.fire(board,x + 0,y - 1, depth + 1)
+            self.fire(board,x + 1,y - 1, depth + 1)
+            self.fire(board,x - 1,y + 0, depth + 1)
+            self.fire(board,x + 1,y + 0, depth + 1)
+            self.fire(board,x - 1,y + 1, depth + 1)
+            self.fire(board,x + 0,y + 1, depth + 1)
+            self.fire(board,x + 1,y + 1, depth + 1)
 
     # Add a flag for where you think a bomb is
     def flag(self,on, board):
