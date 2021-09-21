@@ -71,12 +71,13 @@ def minesweeper():
         return()
       except:
         return()
-        
-    def spawnBomb(self):
+    
+    # This spawns a bomb and makes sure that it isnt adjacent to the pointer
+    def spawnBomb(self, pointer):
       while True:
         bombx = random.randint(0,B_WIDTH-1)
         bomby = random.randint(0,B_HEIGHT-1)
-        if self.readBoard(bombx, bomby) != "X":
+        if self.readBoard(bombx, bomby) != "X" and not(abs(pointer.x-bombx)<=1 and abs(pointer.y-bomby)<=1) :
           self.B[bomby][bombx] = 'X'
           # ICBA to write code to do this in a loop :)
           self.incrementCell(bombx-1, bomby-1)
@@ -133,13 +134,8 @@ def minesweeper():
     def gen(self, pointer):
       good = False
       print("Loading the bombs")
-      while not good:
-        self.__init__()
-        for i in range(N_BOMBS):
-          self.spawnBomb()
-        if B_WIDTH <= 3 and B_HEIGHT <= 3: good = (self.B[0][0] != "X")
-        else: good = (self.B[pointer.y][pointer.x] == 0)
-      print("Safe spawn:", good)
+      for i in range(N_BOMBS):
+        self.spawnBomb(pointer)
 
   class Pointer():
     
