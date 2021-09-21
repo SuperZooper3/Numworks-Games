@@ -175,20 +175,39 @@ def minesweeper():
 
     
     # Checks the cell for a bomb or a clear space
-    def fire(self, board):
-      # Check if the cell has allready been looked at
-      if (not (str(board.B[self.y][self.x])[0] == "D"))and [self.x,self.y] not in board.flagged:
-        # Check to see if the cell where the pointer is at is empty
-        if board.B[self.y][self.x] != "X":
-          # We didnt find a bomb so draw the number
-          if render:kandinsky.draw_string(str(board.B[self.y][self.x]),self.xpointer, self.ypointer)
-          if debug: print(self.xpointer, self.ypointer)    
-        # If we found a bomb, draw a red rectrangle on the cell
-        else:
-          if debug: print("Bomb found",self.xpointer,self.ypointer,block_width,block_height, colors["bomb"])
-          if render: kandinsky.fill_rect(self.xpointer,self.ypointer,block_width,block_height,colors["bomb"])
-        # Add it to the list of checked cells so you cant loose numbers or found bombs
-        board.B[self.y][self.x] = "D" + str(board.B[self.y][self.x] )
+    def fire(self, board, x=None, y=None):
+      if x == None: x = self.x
+      if y == None: y = self.y
+      xSpointer = (block_width+OFFSET)*x+OFFSET
+      ySpointer = (block_height+OFFSET)*y+OFFSET
+      # Check that the cell is valid 
+      if x >= 0 and x < B_WIDTH and y >= 0 and y < B_HEIGHT:
+        # Check if the cell has allready been looked at
+        if (not (str(board.B[y][x])[0] == "D"))and [x,y] not in board.flagged:
+          # Check to see if the cell where the pointer is at is empty
+          if board.B[y][x] != "X":
+            # We didnt find a bomb so draw the number
+            if render:kandinsky.draw_string(str(board.B[y][x]),xSpointer, ySpointer)
+            if debug: print(self.xpointer, self.ypointer)    
+          # If we found a bomb, draw a red rectrangle on the cell
+          else:
+            if debug: print("Bomb found",xSpointer,ySpointer,block_width,block_height, colors["bomb"])
+            if render: kandinsky.fill_rect(xSpointer,ySpointer,block_width,block_height,colors["bomb"])
+          # Add it to the list of checked cells so you cant loose numbers or found bombs
+          board.B[y][x] = "D" + str(board.B[y][x] )
+          
+          # This part of the code implements 0 collapse, through itteration
+          if board.B[y][x][-1] == "0":
+            #print(x, y, "is clear, going deeper")
+            # For all of the cells agacent to this cell, fire at them
+            self.fire(board,x - 1,y - 1)
+            self.fire(board,x + 0,y - 1)
+            self.fire(board,x + 1,y - 1)
+            self.fire(board,x - 1,y + 0)
+            self.fire(board,x + 1,y + 0)
+            self.fire(board,x - 1,y + 1)
+            self.fire(board,x + 0,y + 1)
+            self.fire(board,x + 1,y + 1)
 
     # Add a flag for where you think a bomb is
     def flag(self,on, board):
