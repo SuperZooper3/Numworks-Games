@@ -30,7 +30,7 @@ def minesweeper():
   OFFSET = 2
 
   if N_BOMBS >= B_HEIGHT * B_WIDTH:
-    print("The board would fill or overflow with bombs. Bring down the number of bombs or increas the size of the board.")
+    print("The board would fill or overflow with bombs. Decrease the number of bombs or increase the size of the board.")
     return()
   
   # Precalculate this to not need to have it a million times
