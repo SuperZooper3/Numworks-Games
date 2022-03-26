@@ -7,13 +7,66 @@ b642int = {y:x for x,y in int2B64.items()}
 
 directory = 'images'
 
-scale = 6
+scale = 4
 palletDepth = 6
 size = (320//scale,224//scale)
 
 def pxr(p): return p[0],p[2],p[1]
 def pxg(p): return p[1],p[0],p[2]
 def pxb(p): return p[2],p[0],p[1]
+
+def reduce(s):
+    o = ""
+    curr = s[0]
+    n = 0
+    for c in s:
+        if c == curr: n += 1
+        else:
+            if n > 1: o += str(n)
+            o += curr
+            curr = c
+            n = 1
+    if n > 1: o += str(n)
+    o += curr
+    curr = c
+    n = 1
+    return o
+
+def rehydrate(s): # Turns a reduced string back into the full one
+    o,n="",""
+    for v in s:
+        if v.isnumeric(): n += v
+        else:
+            if n != "":
+                o += v*int(n)
+                n = ""
+            else:o += v
+    return o
+
+def compColour(c):
+    r,g,b=c
+    xr = chr(r//4+32)
+    xg = chr(g//4+32)
+    xb = chr(b//4+32)
+    if xg == "\"": xg = chr(g//4+31)
+    return xr+xg+xb
+
+def squishPallet(p):
+    op = ""
+    for v in p: op += compColour(v)
+    return op
+
+def decompColour(c):
+    r = (ord(c[0])-32)*4
+    g = (ord(c[1])-32)*4
+    b = (ord(c[2])-32)*4
+    return (r,g,b)
+
+def unsquishPallet(p):
+    op = []
+    for i in range(len(p)//3):
+        op.append(decompColour(p[i*3:(i+1)*3]))
+    return op
 
 def generatePallet(bucket,d,f): # d is the recursio depth, f is depth of pallet so 2^d-1 colours
     # Calculate the dominant channel
@@ -97,11 +150,11 @@ for filename in os.listdir(directory):
                             closestDist = dist
                     # print("Closest to x is y:",px,pallet[closest])
                     s += int2B64[closest]
-        album.append(s)
-        colours.append(pallet)
-
+        album.append(reduce(s))
+        colours.append(squishPallet(pallet))
 
 f = open("imgdta.py","w")
+f.write("IMG_SIZE="+size.__repr__()+"\n")
 f.write("ALBUM_DATA="+album.__repr__()+"\n")
-f.write("COLOUR_PALLETS="+colours.__repr__())
+f.write("COLOUR_PALLETS=[r\"\"\""+"\"\"\",r\"\"\"".join(colours)+"\"\"\" ]")
 f.close()
