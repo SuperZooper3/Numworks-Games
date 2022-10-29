@@ -4,7 +4,9 @@
 
  *Warning: **A LOT** of spaghetti code here and copy-pasted lines, these programs are made to work and not much more than that. I have added comments to try and make them more legible but they come with no support.*
 
-## Tetris:
+ Each script has the version I write, and then a minified version to store on the calculator. Minification engine: https://python-minifier.com/
+
+## Tetris
 
 Basic Tetris for a Numworks calculator.  Uses **left** and **right** arrows to move, **down** to move down faster and **up** to rotate. Has **7 bag** to ensure more fun gameplay. The **entire program is procedural** so you can change the width and height in the code to your liking (the settings I have chosen are just what I recommend). Start the game with `tetris()` *Note: points are not scored the same way as in modern Tetris.*
 
@@ -12,7 +14,7 @@ Basic Tetris for a Numworks calculator.  Uses **left** and **right** arrows to m
 
 ![Tetris example image](readmeassets/tetris.jpg)
 
-## Minesweeper:
+## Minesweeper
 
 A minesweeper game for a numworks calculator. **Arrows** to move, **OK** to fire, **(** to flag and **)** to unflag. Start the game with `minesweeper()`.**Fully procedural** so you can make the board **any shape** you would like with the inputs at the start as well as add as many **bombs as you would like!** Using **flags protects you** from accidentally triggering a bomb square. All **boards guarantee** that the first cell is safe for more winnable games.
 
