@@ -112,3 +112,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+imgdta.py
+
+scripts/images/images/*.png
+
+rev.png

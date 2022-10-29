@@ -30,9 +30,12 @@ def unsquishPallet(p):
         op.append(decompColour(p[i*3:(i+1)*3]))
     return op
 
-i = int(input("Image ID:"))
-IMAGE_DATA = rehydrate(ALBUM_DATA[i])
-COLOUR_DATA = unsquishPallet(COLOUR_PALLETS[i])
+i = int(input(f"Image ID [0-{len(ALBUM_DATA)-1}]:"))
+try:
+    IMAGE_DATA = rehydrate(ALBUM_DATA[i])
+    COLOUR_DATA = unsquishPallet(COLOUR_PALLETS[i])
+except:
+    print(f"Invalid image ID, max is {len(ALBUM_DATA)-1}")
 size = IMG_SIZE
 scale = floor(320/size[0])
 

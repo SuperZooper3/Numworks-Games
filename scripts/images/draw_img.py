@@ -8,8 +8,11 @@ cComScale = 4
 def decompColour(c):return ((ord(c[0])-32)*cComScale,(ord(c[1])-32)*cComScale,(ord(c[2])-32)*cComScale)
 def unsquishPallet(p):return [decompColour(p[i*3:(i+1)*3]) for i in range(len(p)//3)]
 
-def draw_img():
-	i = int(input("Image ID:"))
+def DRAW_IMG():
+	i = int(input("Image ID 0-"+str(len(ALBUM_DATA)-1)+": "))
+	if i >= len(ALBUM_DATA):
+		print("Invalid image ID, outside range")
+		return
 	IMAGE_DATA = ALBUM_DATA[i]
 	COLOUR_DATA = unsquishPallet(COLOUR_PALLETS[i])
 	size = IMG_SIZE

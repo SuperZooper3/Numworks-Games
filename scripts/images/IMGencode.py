@@ -7,8 +7,8 @@ b642int = {y:x for x,y in int2B64.items()}
 
 directory = 'images'
 
-scale = 4
-palletDepth = 7
+scale = 5 # Smaller = higher res, min = 1, saves a lot of data (inverse square law)
+palletDepth = 7 # Higher = more colours, max = 7, dosen't save a lot on big images
 size = (320//scale,224//scale)
 
 def pxr(p): return p[0],p[2],p[1]
